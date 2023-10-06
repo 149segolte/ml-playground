@@ -19,6 +19,7 @@
 				'content-type': 'application/json'
             }
 		});
+        files = files.filter(file => file.hash !== hash);
         goto(`/${id}`);
 	}
 </script>
