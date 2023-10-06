@@ -33,9 +33,11 @@ let url = 'https://apis.149segolte.dev/minor';
 {#each projects as proj}
 <div class="mx-12">
     <div class="flex items-center justify-between w-full px-12 bg-gray-300 p-4 mt-6 mb-4">
-        <div class="text-blue-800"
-            ><span class="text-blue-500 underline">{proj.name}</span></div>
-
+        <div class="text-blue-800">
+            <a href={`/${proj.id}`}>
+                <span class="text-blue-500 underline">{proj.name}</span>
+            </a>
+        </div>
         <div class="flex items-center">
             <!-- Container div for the last two spans -->
             <span class="text-blue-800 left-auto">Expires in {calculateHoursLeft(proj.expires)}hrs </span>

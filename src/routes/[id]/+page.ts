@@ -1,3 +1,4 @@
+
 let url = 'https://apis.149segolte.dev/minor';
 import type { PageLoad } from './$types';
 
@@ -11,5 +12,4 @@ export const load: PageLoad = async ({ params }) => {
         });
 
 		let data= await res.json()
-        return data
-    }
+        return data}
