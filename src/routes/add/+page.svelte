@@ -1,4 +1,4 @@
-<script lang="ts">
+<scrip lang="ts">
 	import { goto } from '$app/navigation';
 	let url = 'https://apis.149segolte.dev/minor';
 	let projectName: HTMLInputElement;
@@ -20,8 +20,61 @@
 		const dataa = await res.json();
 		goto('/');
 	}
+
+	
 </script>
 
+<!-- uploading csv file -->
+<script>
+	// Import Dexie library
+import Dexie from 'https://unpkg.com/dexie/dist/dexie.min.js';
+
+// Create a Dexie database
+const db = new Dexie('MyDatabase');
+db.version(1).stores({
+    data: '++id, csvData',
+});
+
+document.getElementById('uploadButton').addEventListener('click', () => {
+    const fileInput = document.getElementById('csvFileInput');
+    const file = fileInput.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const csvData = event.target.result;
+            
+            // Store the CSV data in the Dexie database
+            await db.data.add({ csvData });
+            
+            // Upload the CSV data to the server
+            uploadToServer(csvData);
+        };
+        reader.readAsText(file);
+    }
+});
+
+function uploadToServer(data) {
+    fetch('https://example.com/upload_endpoint', {
+        method: 'POST',
+        body: data,
+        headers: {
+            'Content-Type': 'text/csv',
+        },
+    })
+    .then((response) => {
+        if (response.ok) {
+            console.log('CSV file uploaded successfully.');
+        } else {
+            console.error('Error uploading CSV file:', response.statusText);
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+}
+
+</script>
 <div>
 	<div class="max-w-md mx-auto p-6 rounded-md mt-20">
 		<div class="max-w-md bg-gray-400 p-6 rounded-md shadow-md">
