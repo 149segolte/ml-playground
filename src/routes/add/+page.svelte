@@ -47,8 +47,8 @@ document.getElementById('uploadButton').addEventListener('click', () => {
             // Store the CSV data in the Dexie database
             await db.data.add({ csvData });
             
-            // Upload the CSV data to the server
-            uploadToServer(csvData);
+            // // Upload the CSV data to the server
+            // uploadToServer(csvData);
         };
         reader.readAsText(file);
     }
