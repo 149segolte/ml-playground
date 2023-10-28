@@ -61,37 +61,4 @@
 
 
 
-<!-- <script lang="ts">
-	import { goto } from "$app/navigation";
-    let url = 'https://apis.149segolte.dev/minor';
-
-
-
-    let res = await fetch(`${url}/project/:id/upload`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json"
-    },
-    body: JSON.stringify(data)
-    });
-    const dataa = await res.json();
-    goto("/")
-    
-}
-</script>
-
-<div class="flex justify-center items-center mt-20">
-    <div class="max-w-md bg-gray-400 p-6 rounded-md shadow-md">
-        <h2 class="text-2xl font-bold mb-4 text-center">Upload CSV File</h2>
-
-        <label for="data" class="block text-gray-700 font-bold mb-2">
-            <input type="file" id="fileInput" accept=".csv" class="mt-2 p-2 border rounded w-full focus:outline-none">
-        </label>
-
-        <p class="text-sm text-black">Upload your CSV file here.</p>
-        <p class="text-sm text-black">Supported formats: .csv</p>
-</div>
-</div> -->
-
-
 

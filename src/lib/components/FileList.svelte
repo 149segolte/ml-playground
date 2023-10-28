@@ -35,7 +35,9 @@
 		{#each files as file}
 			<div class="mx-8">
 				<div class="flex items-center justify-between w-full px-12 bg-gray-300 p-4 mt-10 mb-4">
+					<a href={`/${id}/${file.hash}`}>
 					<span class="text-blue-500">{file.name} {file.size}</span>
+				    </a>
 					<div>
 						<span class="text-blue-800 mr-10">{file.shape[0]} rows, {file.shape[1]} columns</span>
 						<button on:click={() => deleteFile(id, file.hash)} class="text-red-500 ml-8 hover:text-red-700">delete</button>
