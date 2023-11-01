@@ -1,9 +1,8 @@
 <script>
   import { goto } from '$app/navigation';
   export let data;
-  import { onMount } from 'svelte';
   import * as d3 from "d3";
-
+  import { onMount, afterUpdate } from "svelte";
   let loaded = false;
   let project;
   let url = 'https://apis.149segolte.dev/minor';
@@ -24,7 +23,7 @@
    });
 
   let model_data;
-
+// loss function graph
   onMount(async () => {
     // Load data from the CSV file
     let lossData = [];
@@ -65,6 +64,67 @@
       .attr("stroke-width", 2)
       .attr("d", lossFunction);
   });
+
+  // bar graph 
+  // let featureImportances = [
+  //   { feature: "PetalWidthCm", importance: 0.33470824 },
+  //   { feature: "PetalLengthCm", importance: 0.2863413 },
+  //   { feature: "SepalWidthCm", importance: 0.20674689 },
+  //   { feature: "SepalLengthCm", importance: 0.17220357 },
+  // ];
+	let width = 600;  
+  let height = 300;
+  onMount(() => {
+    initChart();
+  });
+
+  afterUpdate(() => {
+    updateChart();
+  });
+
+  function initChart() {
+    const svg = d3.select("#feature-importances")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    // Define scales for the x and y axes
+    const xScale = d3.scaleLinear()
+      .domain([0, d3.max(featureImportances, d => d.importance)])
+      .range([0, width]);
+
+    const yScale = d3.scaleBand()
+      .domain(featureImportances.map(d => d.feature))
+      .range([0, height])
+      .padding(0.1);
+
+    // Create bars for feature importances
+    svg.selectAll(".bar")
+      .data(featureImportances)
+      .enter()
+      .append("rect")
+      .attr("class", "bar")
+      .attr("x", 0)
+      .attr("y", d => yScale(d.feature))
+      .attr("width", d => xScale(d.importance))
+      .attr("height", yScale.bandwidth())
+      .attr("fill", "steelblue");
+
+    // Add labels
+    svg.selectAll(".label")
+      .data(featureImportances)
+      .enter()
+      .append("text")
+      .attr("class", "label")
+      .attr("x", d => xScale(d.importance) + 10)
+      .attr("y", d => yScale(d.feature) + yScale.bandwidth() / 2)
+      .attr("dy", "0.35em")
+      .text(d => d.importance);
+  }
+
+  function updateChart() {
+    // Update the chart if needed
+  }
 </script>
 
 <div>    
@@ -120,15 +180,14 @@
     <p class="text-xl">The chart and table below show which features were most important to the model.</p>
   </div>
   <!-- Bar Graph -->
-  <div class="mx-20 border border-gray-300 bg-gray-100 rounded-sm mt-10 h-96">
-    <div>
-      <p class="text-lg text-center font-sans">Training Loss By Round or Epoch</p>
-      <div class="flex items-center justify-center">
-        <div class="w-4 h-4 bg-blue-700 rounded-sm mr-2"></div>
-        <span class="text-lg">Feature Importance</span>
-      </div>
+  <div id="feature-importances" class="border border-gray-300 bg-gray-100 rounded-sm mt-10 h-96">
+    <p class="text-lg text-center font-sans">Feature Importances</p>
+    <div class="flex items-center justify-center">
+      <div class="w-4 h-4 bg-blue-700 rounded-sm mr-2"></div>
+      <span class="text-lg">Feature Importance</span>
     </div>
   </div>
+  
   <div class="mx-20 border-black mt-10">
     <table class="min-w-full bg-white border border-gray-300">
       <thead>
