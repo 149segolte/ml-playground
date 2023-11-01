@@ -1,13 +1,128 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import * as d3 from 'd3';
+	import { onMount, afterUpdate } from 'svelte';
 	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 
 	let url = $page.url.pathname;
 	export let data: PageData;
 	let model_data = data.model;
 	let project = data.project;
+
+	// loss function graph
+	onMount(async () => {
+		// Load data from the CSV file
+		let lossData = [];
+
+		await d3.csv('loss_data.csv', (data) => {
+			lossData.push(Number(data.value)); // Assuming your CSV has a "value" column
+		});
+
+		// Create the loss function using D3
+		const width = 300;
+		const height = 150;
+
+		const svg = d3
+			.select('#loss-function')
+			.append('svg')
+			.attr('width', width)
+			.attr('height', height);
+
+		// Define scales for the x and y axes
+		const xScale = d3
+			.scaleLinear()
+			.domain([0, lossData.length - 1])
+			.range([0, width]);
+
+		const yScale = d3
+			.scaleLinear()
+			.domain([0, d3.max(lossData)])
+			.nice()
+			.range([height, 0]);
+
+		// Create a line generator for the loss function
+		const lossFunction = d3
+			.line()
+			.x((d, i) => xScale(i))
+			.y((d) => yScale(d));
+
+		// Add the loss function line to the SVG
+		svg
+			.append('path')
+			.datum(lossData)
+			.attr('fill', 'none')
+			.attr('stroke', 'steelblue')
+			.attr('stroke-width', 2)
+			.attr('d', lossFunction);
+	});
+
+	// bar graph
+	// let featureImportances = [
+	//   { feature: "PetalWidthCm", importance: 0.33470824 },
+	//   { feature: "PetalLengthCm", importance: 0.2863413 },
+	//   { feature: "SepalWidthCm", importance: 0.20674689 },
+	//   { feature: "SepalLengthCm", importance: 0.17220357 },
+	// ];
+	let width = 600;
+	let height = 300;
+	onMount(() => {
+		initChart();
+	});
+
+	afterUpdate(() => {
+		updateChart();
+	});
+
+	function initChart() {
+		const svg = d3
+			.select('#feature-importances')
+			.append('svg')
+			.attr('width', width)
+			.attr('height', height);
+
+		// Define scales for the x and y axes
+		const xScale = d3
+			.scaleLinear()
+			.domain([0, d3.max(featureImportances, (d) => d.importance)])
+			.range([0, width]);
+
+		const yScale = d3
+			.scaleBand()
+			.domain(featureImportances.map((d) => d.feature))
+			.range([0, height])
+			.padding(0.1);
+
+		// Create bars for feature importances
+		svg
+			.selectAll('.bar')
+			.data(featureImportances)
+			.enter()
+			.append('rect')
+			.attr('class', 'bar')
+			.attr('x', 0)
+			.attr('y', (d) => yScale(d.feature))
+			.attr('width', (d) => xScale(d.importance))
+			.attr('height', yScale.bandwidth())
+			.attr('fill', 'steelblue');
+
+		// Add labels
+		svg
+			.selectAll('.label')
+			.data(featureImportances)
+			.enter()
+			.append('text')
+			.attr('class', 'label')
+			.attr('x', (d) => xScale(d.importance) + 10)
+			.attr('y', (d) => yScale(d.feature) + yScale.bandwidth() / 2)
+			.attr('dy', '0.35em')
+			.text((d) => d.importance);
+	}
+
+	function updateChart() {
+		// Update the chart if needed
+	}
+
 </script>
 
 <div>
@@ -67,7 +182,8 @@
 			</div>
 		</div>
 	</div>
-	<div class="mx-20 border border-gray-300 bg-gray-100 rounded-sm mt-10 h-96">
+	<!-- Loss Function Graph -->
+	<div id="loss-function" class="border border-gray-300 bg-gray-100 rounded-sm mt-10 h-96">
 		<div>
 			<p class="text-lg text-center font-sans">Training Loss By Round or Epoch</p>
 			<div class="flex items-center justify-center">
@@ -82,13 +198,12 @@
 			The chart and table below show which features were most important to the model.
 		</p>
 	</div>
-	<div class="mx-20 border border-gray-300 bg-gray-100 rounded-sm mt-10 h-96">
-		<div>
-			<p class="text-lg text-center font-sans">Training Loss By Round or Epoch</p>
-			<div class="flex items-center justify-center">
-				<div class="w-4 h-4 bg-blue-700 rounded-sm mr-2" />
-				<span class="text-lg">Feature Importance</span>
-			</div>
+	<!-- Bar Graph -->
+	<div id="feature-importances" class="border border-gray-300 bg-gray-100 rounded-sm mt-10 h-96">
+		<p class="text-lg text-center font-sans">Feature Importances</p>
+		<div class="flex items-center justify-center">
+			<div class="w-4 h-4 bg-blue-700 rounded-sm mr-2" />
+			<span class="text-lg">Feature Importance</span>
 		</div>
 	</div>
 
