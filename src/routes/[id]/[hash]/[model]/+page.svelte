@@ -151,10 +151,7 @@
 			<p class="mt-4 font-sans text-lg text-gray-700">
 				Your dataset had {model_data.config.shape[0]} rows and {model_data.config.shape[1]} columns,
 				{model_data.config.shape[0]} rows were used in training, {model_data.config.test_size} rows were
-				used in testing, and {model_data.config.shape[1]} columns, {model_data.config.shape[0]} rows
-				were used in training, {model_data.config.train_size} rows were used in model comparison. The
-				model is a {model_data.config.shape[1]} columns, {model_data.config.shape[0]} rows were used
-				in training, {model_data.config.betch_size}rows were used in model comparison
+				used in testing,{model_data.config.train_size} rows were used in model comparison.
 			</p>
 		</div>
 		<div class="mt-4 font-sans text-lg">
