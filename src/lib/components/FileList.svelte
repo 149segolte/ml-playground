@@ -1,10 +1,9 @@
 <script lang="ts">
-	export let files: any[] = [];
+	export let files = [];
 	let url = 'https://apis.149segolte.dev/minor';
 	import { page } from '$app/stores';
-    import { goto } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	let id = $page.url.pathname.split('/')[1];
-    console.log(id);
 
 	function calculateHoursLeft(expires: any) {
 		const currentTimestamp = Math.ceil(Date.now() / 1000);
@@ -13,14 +12,14 @@
 	}
 
 	async function deleteFile(id: string, hash: string) {
-		let res = await fetch(`${url}/project/${id}/${hash}`, {
+		let res = await fetch(`${url}/project/${id}/data/${hash}`, {
 			method: 'DELETE',
 			headers: {
 				'content-type': 'application/json'
-            }
+			}
 		});
-        files = files.filter(file => file.hash !== hash);
-        goto(`/${id}`);
+		files = files.filter((file) => file.hash !== hash);
+		goto(`/${id}`);
 	}
 </script>
 
@@ -36,11 +35,14 @@
 			<div class="mx-8">
 				<div class="flex items-center justify-between w-full px-12 bg-gray-300 p-4 mt-10 mb-4">
 					<a href={`/${id}/${file.hash}`}>
-					<span class="text-blue-500">{file.name} {file.size}</span>
-				    </a>
+						<span class="text-blue-500">{file.name} {file.size}</span>
+					</a>
 					<div>
 						<span class="text-blue-800 mr-10">{file.shape[0]} rows, {file.shape[1]} columns</span>
-						<button on:click={() => deleteFile(id, file.hash)} class="text-red-500 ml-8 hover:text-red-700">delete</button>
+						<button
+							on:click={() => deleteFile(id, file.hash)}
+							class="text-red-500 ml-8 hover:text-red-700">delete</button
+						>
 					</div>
 				</div>
 			</div>

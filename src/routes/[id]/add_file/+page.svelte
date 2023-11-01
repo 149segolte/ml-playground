@@ -1,20 +1,23 @@
 <script lang="ts">
- import { db, Data } from "$lib/db";
+	import { db } from '$lib/db';
+	import type { Data } from '$lib/db';
 
 	let selectedFile: File | undefined;
 	let url = 'https://apis.149segolte.dev/minor';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	let id = $page.url.pathname.split('/')[1];
+	console.log($page.url.pathname);
 
 	function handleFileUpload(event: Event) {
-		const target = event.target as HTMLInputElement;
-		selectedFile = (target.files && target.files[0]) || undefined;
+		if (event.target?.files) {
+			selectedFile = event.target?.files[0];
+		}
 	}
 
 	async function addFile() {
 		if (selectedFile) {
-      const name =  selectedFile.name;
+			const name = selectedFile.name;
 			const reader = new FileReader();
 			reader.onload = async (event) => {
 				const csvData = event.target?.result;
@@ -23,15 +26,14 @@
 				await db.data.add({ name, csvData } as Data);
 
 				// goto model page
-        goto(`/${id}/model`);
-      }
-        
+				goto(`/${id}/model`);
+			};
+
 			reader.readAsText(selectedFile);
 		} else {
 			alert('Please select a CSV file.');
 		}
 	}
-
 </script>
 
 <div class="flex justify-center items-center mt-20">
@@ -51,7 +53,7 @@
 			class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none"
 			on:click={addFile}
 		>
-			Upload
+			Submit
 		</button>
 
 		<p class="text-sm text-black mt-2">Upload your CSV file here.</p>

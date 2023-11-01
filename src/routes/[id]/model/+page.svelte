@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 
 	import { db } from '$lib/db';
 
 	let url = 'https://apis.149segolte.dev/minor';
-	let dispatch = createEventDispatcher();
 	let id = $page.url.pathname.split('/')[1];
 	var hash;
 	let requestData = {
@@ -21,36 +20,40 @@
 	};
 
 	function handleInputChange(event) {
-		const { name, value } = event.target;
-		requestData = { ...requestData, [name]: value };
-	}
+    const { name, value } = event.target;
+    const numericValue = parseInt(value, 10);
+    requestData = { ...requestData, [name]: numericValue };
+    }
 
 	async function submitData() {
 		// get data table from dexie as string
-		const data = await db.data.get(1);
-		if (data) {
+		let files = await db.data.toArray();
+		console.log(files);
+
+		if (files.length > 0) {
+			let data = files[0];
 			const name = data.name;
 			const csvData = data.csvData;
 			// convert csvData to Blob
-			var blob = new Blob([csvData], { type: 'text/plain' });
-			var file = new File([blob], name, { type: 'text/plain' });
+			var blob = new Blob([csvData], { type: 'text/csv' });
+			var file = new File([blob], name, { type: 'text/csv' });
 
 			let formData = new FormData();
 			formData.append('data', file, name);
 			formData.append('target', 'Species');
 
-			const res = await fetch(`${url}/project/${id}/upload`, {
+			const res = await fetch(`${url}/project/${id}/data`, {
 				method: 'POST',
 				body: formData,
-				headers: {
-					'Content-Type': 'multipart/form-data'
-				},
 				redirect: 'follow'
 			});
-
 			const resdata = await res.json();
+			if (resdata) {
+				hash = resdata.hash;
+				// await db.data.clear();
+			}
 
-			hash = resdata.hash;
+			console.log(JSON.stringify(requestData));
 
 			const response = await fetch(`${url}/project/${id}/data/${hash}/add`, {
 				method: 'POST',
@@ -59,18 +62,18 @@
 				},
 				body: JSON.stringify(requestData)
 			});
-
 			const responseData = await response.json();
+
+			goto(`/${id}/${hash}`);
 		}
 	}
 </script>
 
 <div class="bg-gray-200">
-	<div class="container min-h-screen relative">
-		<div class="flex justify-between bg-gray-300 p-4 mb-4">
+	<div class="container flex flex-col h-full">
+		<div class="flex justify-between bg-gray-300 p-4">
 			<span class="text-2xl font-semibold text-gray-700 px-8">File's Name (Size)</span>
 			<div class="button-group">
-				<button class="bg-gray-700 text-white px-4 py-2 rounded-full hover:bg-gray-800">Add</button>
 				<button
 					class="bg-gray-700 text-white px-4 py-2 rounded-full hover:bg-gray-800"
 					on:click={submitData}>Done</button
@@ -81,11 +84,8 @@
 			</div>
 		</div>
 
-		<div class="mt-10 font-semibold">
-			<div
-				class="bg-white p-4 ml-8 shadow float-left"
-				style="width: 45%; max-height: 30rem; overflow-y: auto;"
-			>
+		<div class="m-4 grid md:grid-cols-2 gap-2 font-semibold">
+			<div class="bg-white p-4 m-2 shadow">
 				<div>
 					<label for="name">Name:</label>
 					<input
@@ -93,7 +93,6 @@
 						id="name"
 						name="name"
 						bind:value={requestData.name}
-						on:input={handleInputChange}
 					/>
 				</div>
 				<div>
@@ -103,7 +102,6 @@
 						id="model_type"
 						name="model_type"
 						bind:value={requestData.model_type}
-						on:input={handleInputChange}
 					/>
 				</div>
 				<div>
@@ -113,7 +111,6 @@
 						id="train_size"
 						name="train_size"
 						bind:value={requestData.train_size}
-						on:input={handleInputChange}
 					/>
 				</div>
 
@@ -124,7 +121,6 @@
 						id="test_size"
 						name="test_size"
 						bind:value={requestData.test_size}
-						on:input={handleInputChange}
 					/>
 				</div>
 				<div>
@@ -134,7 +130,6 @@
 						id="validation_size"
 						name="validation_size"
 						bind:value={requestData.validation_size}
-						on:input={handleInputChange}
 					/>
 				</div>
 				<div>
@@ -145,7 +140,6 @@
 						id="l2_regularization"
 						name="l2_regularization"
 						bind:value={requestData.l2_regularization}
-						on:input={handleInputChange}
 					/>
 				</div>
 				<div>
@@ -156,7 +150,6 @@
 						id="learning_rate"
 						name="learning_rate"
 						bind:value={requestData.learning_rate}
-						on:input={handleInputChange}
 					/>
 				</div>
 				<div>
@@ -166,7 +159,6 @@
 						id="max_epochs"
 						name="max_epochs"
 						bind:value={requestData.max_epochs}
-						on:input={handleInputChange}
 					/>
 				</div>
 				<div>
@@ -176,9 +168,17 @@
 						id="batch_size"
 						name="batch_size"
 						bind:value={requestData.batch_size}
-						on:input={handleInputChange}
 					/>
 				</div>
+			</div>
+
+			<div
+				class="p-4 m-2 shadow flex cursor-pointer justify-center items-center border-4 border-dashed border-neutral-700"
+				on:click={() => {
+					window.alert('Singular model available yet.n');
+				}}
+			>
+				<p class="font-bold text-xl">+ Add</p>
 			</div>
 		</div>
 	</div>
