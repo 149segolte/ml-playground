@@ -3,7 +3,6 @@
 	import { goto } from '$app/navigation';
 	import FileList from '$lib/components/FileList.svelte';
 	export let data: PageData;
-	console.log(data);
 </script>
 
 <div>

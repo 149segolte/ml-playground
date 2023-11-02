@@ -2,7 +2,7 @@ let url = 'https://apis.149segolte.dev/minor';
 import type { PageLoad } from './$types';
 import { goto } from '$app/navigation';
 
-export const load: PageLoad = async ({ params }) => {
+export const load: PageLoad = async ({ fetch, params }) => {
 	let res = await fetch(`${url}/project/${params.id}/data/${params.hash}/models`, {
 		method: 'GET',
 		headers: {

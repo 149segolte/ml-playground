@@ -10,18 +10,18 @@
 	let model_data = data.model;
 	let project = data.project;
 
+	// Load data from the CSV file
+	let lossData = [
+		0.43, 0.43, 0.42, 0.4, 0.3, 0.2, 0.1, 0.05, 0.05, 0.055, 0.02, 0.0119, 0.01, 0.0015, 0.0015,
+		0.0015, 0.0015, 0.0015, 0.0015, 0.0015, 0.0015, 0.0015, 0.0015, 0.0015, 0.0015, 0.0015, 0.0015,
+		0.0015, 0.0015
+	];
+
 	// loss function graph
-	onMount(async () => {
-		// Load data from the CSV file
-		let lossData = [];
-
-		await d3.csv('loss_data.csv', (data) => {
-			lossData.push(Number(data.value)); // Assuming your CSV has a "value" column
-		});
-
+	function initLossGraph() {
 		// Create the loss function using D3
-		const width = 300;
-		const height = 150;
+		const width = 600;
+		const height = 300;
 
 		const svg = d3
 			.select('#loss-function')
@@ -55,26 +55,28 @@
 			.attr('stroke', 'steelblue')
 			.attr('stroke-width', 2)
 			.attr('d', lossFunction);
-	});
+	}
 
 	// bar graph
-	// let featureImportances = [
-	//   { feature: "PetalWidthCm", importance: 0.33470824 },
-	//   { feature: "PetalLengthCm", importance: 0.2863413 },
-	//   { feature: "SepalWidthCm", importance: 0.20674689 },
-	//   { feature: "SepalLengthCm", importance: 0.17220357 },
-	// ];
-	let width = 600;
-	let height = 300;
+	let featureImportances = [
+		{ feature: 'PetalWidthCm', importance: 0.33470824 },
+		{ feature: 'PetalLengthCm', importance: 0.2863413 },
+		{ feature: 'SepalWidthCm', importance: 0.20674689 },
+		{ feature: 'SepalLengthCm', importance: 0.17220357 }
+	];
 	onMount(() => {
-		initChart();
+		initLossGraph();
+		initBarChart();
 	});
 
 	afterUpdate(() => {
 		updateChart();
 	});
 
-	function initChart() {
+	function initBarChart() {
+		const width = 600;
+		const height = 300;
+
 		const svg = d3
 			.select('#feature-importances')
 			.append('svg')
@@ -84,7 +86,7 @@
 		// Define scales for the x and y axes
 		const xScale = d3
 			.scaleLinear()
-			.domain([0, d3.max(featureImportances, (d) => d.importance)])
+			.domain([0, d3.max(featureImportances, (d) => d.importance) + 0.1])
 			.range([0, width]);
 
 		const yScale = d3
@@ -122,7 +124,6 @@
 	function updateChart() {
 		// Update the chart if needed
 	}
-
 </script>
 
 <div>
@@ -163,7 +164,9 @@
 			</p>
 		</div>
 	</div>
-	<div class="mt-10 mx-20 border h-36 border-gray-300 bg-gray-100 rounded-sm">
+	<div
+		class="mt-10 mx-20 border h-36 border-gray-300 bg-gray-100 rounded-sm flex flex-col items-center"
+	>
 		<div class="text-center">
 			<p class="text-xl mt-3">Accuracy</p>
 			<p class="text-lg text-green-500">76.67%</p>
@@ -180,8 +183,11 @@
 		</div>
 	</div>
 	<!-- Loss Function Graph -->
-	<div id="loss-function" class="border border-gray-300 bg-gray-100 rounded-sm mt-10 h-96">
-		<div>
+	<div
+		id="loss-function"
+		class="border border-gray-300 bg-gray-100 rounded-sm mt-10 mx-20 h-96 flex flex-col items-center"
+	>
+		<div class="flex flex-col items-center mb-4">
 			<p class="text-lg text-center font-sans">Training Loss By Round or Epoch</p>
 			<div class="flex items-center justify-center">
 				<div class="w-4 h-4 bg-blue-500 rounded-sm mr-2" />
@@ -196,9 +202,12 @@
 		</p>
 	</div>
 	<!-- Bar Graph -->
-	<div id="feature-importances" class="border border-gray-300 bg-gray-100 rounded-sm mt-10 h-96">
+	<div
+		id="feature-importances"
+		class="border border-gray-300 bg-gray-100 rounded-sm mt-10 mx-20 h-96 flex flex-col items-center"
+	>
 		<p class="text-lg text-center font-sans">Feature Importances</p>
-		<div class="flex items-center justify-center">
+		<div class="flex items-center justify-center mb-4">
 			<div class="w-4 h-4 bg-blue-700 rounded-sm mr-2" />
 			<span class="text-lg">Feature Importance</span>
 		</div>
