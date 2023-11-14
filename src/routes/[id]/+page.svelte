@@ -11,6 +11,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
 	import * as Table from '$lib/components/ui/table';
+	import { Toggle } from '$lib/components/ui/toggle';
 	import { z } from 'zod';
 	import Papa from 'papaparse';
 	import { page } from '$app/stores';
@@ -88,7 +89,12 @@
 		});
 	}
 
+	let debug = false;
 	function addFile() {
+		if (debug) {
+			console.log(csv);
+			return;
+		} else {
 		let target = (document.getElementById('target') as HTMLInputElement).value;
 		if (target === '') {
 			alert('Please select a target column');
@@ -116,6 +122,7 @@
 					alert(`Error adding file. Status: ${res.status}`);
 				}
 			});
+		}
 		}
 	}
 
@@ -320,8 +327,16 @@
 									<span class="text-lg mt-4">Drag and drop your file here</span>
 								</div>
 							{:else}
-								<Label for="name" class="text-md mb-1">Name</Label>
-								<Input type="text" id="name" value={csv.name.split('.')[0]} />
+								<div class="flex flex-row items-center justify-between">
+									<div class="flex flex-col">
+										<Label for="name" class="text-md mb-1">Name</Label>
+										<Input type="text" id="name" value={csv.name.split('.')[0]} />
+									</div>
+									<div class="flex flex-col">
+										<Label for="type" class="text-md mb-1">Debug</Label>
+										<Toggle pressed={debug}>D</Toggle>
+									</div>
+								</div>
 								<div class="flex flex-row items-center mt-4">
 									<div class="w-2/3">
 										<Label class="text-md">Shape</Label>
