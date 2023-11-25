@@ -1,1 +1,1 @@
-export let url = 'https://apis.149segolte.dev/minor';
+export let url = 'https://flowing-teal-terribly.ngrok-free.app';
