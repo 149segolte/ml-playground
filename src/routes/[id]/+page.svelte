@@ -355,7 +355,6 @@
 											<Form.Select>
 												<Form.SelectTrigger placeholder="Choose a method to handle empty values" />
 												<Form.SelectContent>
-													<Form.SelectItem value="none">None</Form.SelectItem>
 													<Form.SelectItem value="drop">Drop</Form.SelectItem>
 													<Form.SelectItem value="mean">Mean</Form.SelectItem>
 													<Form.SelectItem value="median">Median</Form.SelectItem>
@@ -373,7 +372,6 @@
 													placeholder="Choose a method to encode categorical values"
 												/>
 												<Form.SelectContent>
-													<Form.SelectItem value="none">None</Form.SelectItem>
 													<Form.SelectItem value="onehot">One Hot</Form.SelectItem>
 													<Form.SelectItem value="label">Label</Form.SelectItem>
 													<Form.SelectItem value="ordinal">Ordinal</Form.SelectItem>
@@ -389,7 +387,6 @@
 											<Form.Select>
 												<Form.SelectTrigger placeholder="Choose a method to scale values" />
 												<Form.SelectContent>
-													<Form.SelectItem value="none">None</Form.SelectItem>
 													<Form.SelectItem value="minmax">Min-Max</Form.SelectItem>
 													<Form.SelectItem value="standard">Standard</Form.SelectItem>
 													<Form.SelectItem value="robust">Robust</Form.SelectItem>
