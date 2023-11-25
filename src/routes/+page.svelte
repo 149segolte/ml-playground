@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
-	import type { PageData } from './$types';
+	import type { PageServerData } from './$types';
 	import { Plus, Pencil, X } from 'lucide-svelte';
 	import * as Card from '$lib/components/ui/card';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
@@ -8,9 +8,10 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Table from '$lib/components/ui/table';
+	import { url } from '$lib/api';
 	import { z } from 'zod';
 
-	export let data: PageData;
+	export let data: PageServerData;
 	const schema = z.object({
 		name: z.string().min(4),
 		description: z.string().min(1)
@@ -33,7 +34,7 @@
 			return;
 		}
 
-		fetch('https://apis.149segolte.dev/minor/project', {
+		fetch(`${url}/project`, {
 			method: 'POST',
 			headers: {
 				'content-type': 'application/json'
@@ -54,7 +55,7 @@
 	}
 
 	function deleteProject(id: string) {
-		fetch(`https://apis.149segolte.dev/minor/project/${id}`, {
+		fetch(`${url}/minor/project/${id}`, {
 			method: 'DELETE'
 		}).then((res) => {
 			if (res.ok) {

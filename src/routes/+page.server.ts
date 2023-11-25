@@ -1,7 +1,7 @@
-let url = 'https://apis.149segolte.dev/minor';
-import type { PageLoad } from './$types';
+import type { PageServerLoad } from './$types';
+import { url } from '$lib/api';
 
-export const load: PageLoad = async ({ fetch, params }) => {
+export const load: PageServerLoad = async ({ fetch, params }) => {
 	let res = await fetch(`${url}/project`, {
 		method: 'GET',
 		headers: {
