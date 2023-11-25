@@ -63,7 +63,7 @@ export const actions: Actions = {
 			redirect: 'follow'
 		});
 		let data2 = await res2.json();
-		if (res2.status !== 200) {
+		if (res2.status !== 201) {
 			return fail(res2.status, {
 				form: {
 					...form.data,
