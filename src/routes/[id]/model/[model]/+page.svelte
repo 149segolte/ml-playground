@@ -172,39 +172,18 @@
 						</Table.Root>
 					</div>
 
-					<div class="border rounded-lg bg-card text-card-foreground shadow-sm h-min">
-						<Table.Root>
-							<Table.Body>
-								<Table.Row>
-									<Table.Head class="border-r">Model</Table.Head>
-									<Table.Cell>{data.model.name}</Table.Cell>
-								</Table.Row>
-								<Table.Row>
-									<Table.Head class="border-r">Type</Table.Head>
-									<Table.Cell>{data.model.model_type}</Table.Cell>
-								</Table.Row>
-								<Table.Row>
-									<Table.Head class="border-r">Split</Table.Head>
-									<Table.Cell
-										>Train: {data.model.config.train_size / 100} / Test: {data.model.config
-											.test_size / 100}</Table.Cell
-									>
-								</Table.Row>
-								<Table.Row>
-									<Table.Head class="border-r">Learning Rate</Table.Head>
-									<Table.Cell>{data.model.config.learning_rate.toFixed(2)}</Table.Cell>
-								</Table.Row>
-								<Table.Row>
-									<Table.Head class="border-r">Epochs</Table.Head>
-									<Table.Cell>{data.model.config.max_epochs}</Table.Cell>
-								</Table.Row>
-								<Table.Row>
-									<Table.Head class="border-r">Batch Size</Table.Head>
-									<Table.Cell>{data.model.config.batch_size}</Table.Cell>
-								</Table.Row>
-							</Table.Body>
-						</Table.Root>
-					</div>
+						<div class="border rounded-lg bg-card text-card-foreground shadow-sm h-min">
+							<Table.Root>
+								<Table.Body>
+									{#each Object.keys(data.model.config) as key}
+										<Table.Row>
+											<Table.Head class="border-r">{key}</Table.Head>
+											<Table.Cell>{data.model.config[key]}</Table.Cell>
+										</Table.Row>
+									{/each}
+								</Table.Body>
+							</Table.Root>
+						</div>
 				</div>
 			</div>
 

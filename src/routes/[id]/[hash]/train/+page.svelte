@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import type { PageServerData } from './$types';
 	import { ArrowLeft, Plus } from 'lucide-svelte';
 	import * as Card from '$lib/components/ui/card';
@@ -7,19 +7,19 @@
 	import * as Table from '$lib/components/ui/table';
 	import { page } from '$app/stores';
 	import * as Form from '$lib/components/ui/form';
-	import { modelSchema, type ModelSchema } from './schema';
-	import type { SuperValidated } from 'sveltekit-superforms';
-	import type { FormOptions } from 'formsnap';
+	import { modelSchema } from './schema';
 	import { superForm } from 'sveltekit-superforms/client';
 
-	let { id, hash } = $page.params;
+	let { id } = $page.params;
 	export let data: PageServerData;
 
 	const form = superForm(data.form, {
 		validators: modelSchema,
 		onResult: (ev) => {
 			if (ev.result.type === 'success') {
-				invalidateAll();
+				goto(`/${id}`).catch((err) => {
+					console.error('Failed to navigate', err);
+				});
 			} else {
 				console.error('Form validation failed', ev.result);
 				alert(`Form validation failed: ${ev.result}`);

@@ -1,8 +1,7 @@
 let url = 'https://apis.149segolte.dev/minor';
-import type { PageLoad } from './$types';
-import { goto } from '$app/navigation';
+import type { PageServerLoad } from './$types';
 
-export const load: PageLoad = async ({ fetch, params }) => {
+export const load: PageServerLoad = async ({ fetch, params }) => {
 	let model = await fetch(`${url}/project/${params.id}/model/${params.model}`, {
 		method: 'GET',
 		headers: {
@@ -18,6 +17,9 @@ export const load: PageLoad = async ({ fetch, params }) => {
 	});
 
 	let model_data = await model.json();
+	delete model_data['config']['id'];
+	delete model_data['config']['project'];
+	delete model_data['config']['file'];
 	let project_data = await project.json();
 	return {
 		project: project_data,

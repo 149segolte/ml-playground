@@ -44,7 +44,8 @@ export const actions: Actions = {
 		console.log(data);
 
 		return {
-			form
+			form,
+			data
 		};
 	}
 };
