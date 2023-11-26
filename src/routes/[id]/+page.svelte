@@ -153,11 +153,11 @@
 								<Dialog.Trigger class={buttonVariants({ variant: 'link' }) + ' !p-0'}>
 									<Card.Title class="text-xl">{file.name}</Card.Title>
 								</Dialog.Trigger>
-								<Dialog.Content class="max-w-3xl">
+								<Dialog.Content class="max-w-[unset] !w-[unset]">
 									<Dialog.Header>
 										<Dialog.Title class="text-xl">{file.name}</Dialog.Title>
 									</Dialog.Header>
-									<div class="flex flex-col">
+									<div class="max-w-3xl">
 										<div class="mt-1 flex flex-row flex-wrap gap-2">
 											<Badge class="whitespace-nowrap">
 												Shape: {file.shape[0]} x {file.shape[1]}
@@ -175,9 +175,6 @@
 												Categorical: {file.categorical || 'Ordinal'}
 											</Badge>
 											<Badge class="whitespace-nowrap">
-												Bucket: {file.bucket || 'None'}
-											</Badge>
-											<Badge class="whitespace-nowrap">
 												Scale: {file.scale || 'None'}
 											</Badge>
 											<Badge class="whitespace-nowrap">
@@ -189,7 +186,7 @@
 											{/if}
 										</div>
 										<div class="mt-4 text-md font-semibold">Top 5 rows</div>
-										<Table.Root>
+										<Table.Root class="overflow-x-auto">
 											<Table.Header>
 												<Table.Row>
 													{#each file.features as col}
@@ -294,25 +291,25 @@
 						</Sheet.Header>
 						<div class="mt-4 flex flex-col justify-center">
 							<Form.Root {options} {form} schema={formSchema} let:config>
-									<Form.Field {config} name="file">
-										<Form.Item>
-											<div
-												class="p-4 rounded-lg border border-dashed bg-card text-card-foreground shadow-sm flex flex-col items-center justify-center relative"
-												class:hidden={csv}
-											>
-												<Form.Input
-													type="file"
-													name="file"
-													accept=".csv,.tsv,.json,.xml"
-													multiple={false}
-													class="opacity-0 absolute left-0 top-0 w-full h-full cursor-pointer"
-													on:change={fileHandler}
-												/>
-												<Upload class="w-20 h-20" />
-												<span class="text-lg mt-4">Drag and drop your file here</span>
-											</div>
-										</Form.Item>
-									</Form.Field>
+								<Form.Field {config} name="file">
+									<Form.Item>
+										<div
+											class="p-4 rounded-lg border border-dashed bg-card text-card-foreground shadow-sm flex flex-col items-center justify-center relative"
+											class:hidden={csv}
+										>
+											<Form.Input
+												type="file"
+												name="file"
+												accept=".csv,.tsv,.json,.xml"
+												multiple={false}
+												class="opacity-0 absolute left-0 top-0 w-full h-full cursor-pointer"
+												on:change={fileHandler}
+											/>
+											<Upload class="w-20 h-20" />
+											<span class="text-lg mt-4">Drag and drop your file here</span>
+										</div>
+									</Form.Item>
+								</Form.Field>
 								{#if csv}
 									<Form.Field {config} name="name">
 										<Form.Item>

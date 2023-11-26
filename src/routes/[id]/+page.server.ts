@@ -52,14 +52,20 @@ export const actions: Actions = {
 				}
 			});
 		}
-		var formdata = new FormData();
-		let handle = new File([data.content], data.name, { type: data.type });
-		formdata.append('data', handle, data.name);
-		formdata.append('target', form.data.target);
+
+		data.content_type = data.type;
+		delete data.type;
+		let raw = JSON.stringify({
+			...form.data,
+			file: data
+		});
 
 		let res2 = await fetch(`${url}/project/${params.id}/add`, {
 			method: 'POST',
-			body: formdata,
+			headers: {
+				'content-type': 'application/json'
+			},
+			body: raw,
 			redirect: 'follow'
 		});
 		let data2 = await res2.json();

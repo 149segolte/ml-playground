@@ -1,361 +1,356 @@
 <script lang="ts">
-	import type { PageData } from './$types';
-	import { goto } from '$app/navigation';
-	import * as Card from '$lib/components/ui/card';
-	import * as Table from '$lib/components/ui/table';
-	import { Label } from '$lib/components/ui/label';
-	import { Input } from '$lib/components/ui/input';
-	import * as Select from '$lib/components/ui/select';
-	import { Button } from '$lib/components/ui/button';
-	import { Switch } from '$lib/components/ui/switch';
+	import { goto, invalidateAll } from '$app/navigation';
+	import type { PageServerData } from './$types';
 	import { ArrowLeft, Plus } from 'lucide-svelte';
+	import * as Card from '$lib/components/ui/card';
+	import { Button } from '$lib/components/ui/button';
+	import * as Table from '$lib/components/ui/table';
 	import { page } from '$app/stores';
-	import { z } from 'zod';
+	import * as Form from '$lib/components/ui/form';
+	import { modelSchema, type ModelSchema } from './schema';
+	import type { SuperValidated } from 'sveltekit-superforms';
+	import type { FormOptions } from 'formsnap';
+	import { superForm } from 'sveltekit-superforms/client';
 
-	export let data: PageData;
 	let { id, hash } = $page.params;
-	let modelSchema = z.object({
-		name: z.string(),
-		model: z.discriminatedUnion('type', [
-			z.object({
-				task: z.enum(['Regression']),
-				type: z.enum([
-					'Ordinary Least Squares',
-					'Isotonic Regression',
-					'GLM',
-					'Elastic Net',
-					'Binomial Logistic Regression',
-					'Multinomial Logistic Regression'
-				])
-			}),
-			z.object({
-				task: z.enum(['Classification']),
-				type: z.enum([
-					'Decision Tree',
-					'Support Vector Machine',
-					'Gaussian Naive Bayes',
-					'Multinomial Naive Bayes'
-				])
-			}),
-			z.object({
-				task: z.enum(['Clustering']),
-				type: z.enum(['KMeans', 'DBSCAN'])
-			})
-		]),
-		split: z.object({
-			test_size: z.number().min(0).max(1),
-			shuffle: z.boolean()
-		}),
-		hyperparameters: z.object({
-			learning_rate: z.number().min(0.0001).max(1),
-			epochs: z.number().min(1),
-			batch_size: z.number().min(1),
-			optimizer: z.enum(['Adam', 'Adagrad', 'Adamax', 'Ftrl']),
-			loss: z.enum([
-				'RSME',
-				'MSE',
-				'MAE',
-				'MSLE',
-				'MAPE',
-				'Hinge',
-				'Log Cosh',
-				'Binary Crossentropy',
-				'Poisson',
-				'Cosine Similarity',
-				'Huber'
-			])
-		})
+	export let data: PageServerData;
+
+	const form = superForm(data.form, {
+		validators: modelSchema,
+		onResult: (ev) => {
+			if (ev.result.type === 'success') {
+				invalidateAll();
+			} else {
+				console.error('Form validation failed', ev.result);
+				alert(`Form validation failed: ${ev.result}`);
+			}
+		}
 	});
+	let val_store = form.form;
 
-	let model = {
-		name: 'Model 1',
-		model: {
-			task: '',
-			type: ''
-		},
-		split: {
-			test_size: 0.2,
-			shuffle: true
-		},
-		hyperparameters: {
-			learning_rate: 0.01,
-			epochs: 100,
-			batch_size: 32,
-			optimizer: 'Adam',
-			loss: 'MSE',
-			metrics: 'MAE'
-		}
+	$: console.log($val_store);
+
+	let choices = {
+		'Ordinary Least Squares': [''],
+		'Elastic Net': ['alpha', 'l1_ratio', 'max_iter', 'tol'],
+		'Logistic Regression': ['C', 'max_iter', 'tol'],
+		'Gradient Descent': [
+			'loss',
+			'alpha',
+			'max_iter',
+			'tol',
+			'shuffle',
+			'learning_rate',
+			'early_stopping',
+			'validation_fraction'
+		],
+		'Decision Tree': [
+			'criterion',
+			'max_depth',
+			'min_samples_split',
+			'min_samples_leaf',
+			'max_features',
+			'max_leaf_nodes'
+		],
+		'Support Vector Machine': ['C', 'kernel', 'degree', 'gamma', 'tol', 'max_iter']
 	};
-	const inner1 = model.model;
-	const inner2 = model.split;
-	const inner3 = model.hyperparameters;
-	$: inner1, (model = model);
-	$: inner2, (model = model);
-	$: inner3, (model = model);
-
-	function addModel() {
-		let valid = modelSchema.safeParse(model);
-		if (!valid.success) {
-			console.log(valid.error);
-			(document.getElementById('add') as HTMLButtonElement).disabled = false;
-			alert(`Invalid model configuration: ${valid.error}`);
-			return;
-		}
-
-		let payload = {
-			name: valid.data.name,
-			model_type: 'Linear Regression',
-			train_size: Math.round((1 - valid.data.split.test_size) * 100),
-			test_size: Math.round(valid.data.split.test_size * 100),
-			validation_size: 0,
-			l2_regularization: 0.05,
-			learning_rate: valid.data.hyperparameters.learning_rate,
-			max_epochs: valid.data.hyperparameters.epochs,
-			batch_size: valid.data.hyperparameters.batch_size
-		};
-		fetch(`https://apis.149segolte.dev/minor/project/${id}/file/${hash}/add`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(payload)
-		})
-			.then((res) => {
-				if (res.ok) {
-					return res.json();
-				} else {
-					(document.getElementById('add') as HTMLButtonElement).disabled = false;
-					console.error(`Error adding model. Status: ${res.status}`);
-					alert(`Error adding model. Status: ${res.status}`);
-				}
-			})
-			.then((data) => {
-				goto(`/${id}`);
-			});
-	}
 </script>
 
-<Card.Root>
-	<Card.Header>
-		<div class="flex flex-row items-center">
-			<Button size="icon" variant="ghost" on:click={() => goto(`/${id}`)}>
-				<ArrowLeft />
-			</Button>
-			<div class="ml-4 flex items-baseline">
-				<Card.Title class="text-2xl font-semibold capitalize">Model Configuration</Card.Title>
+<Form.Root controlled {form} schema={modelSchema} let:config>
+	<Card.Root>
+		<Card.Header>
+			<div class="flex flex-row items-center">
+				<Button size="icon" variant="ghost" on:click={() => goto(`/${id}`)}>
+					<ArrowLeft />
+				</Button>
+				<div class="ml-4 flex items-baseline">
+					<Card.Title class="text-2xl font-semibold capitalize">Model Configuration</Card.Title>
+				</div>
+				<Form.Button id="add" class="ml-auto rounded-full">
+					<Plus class="mr-2 h-4 w-4" />
+					Add to queue
+				</Form.Button>
 			</div>
-			<Button
-				id="add"
-				class="ml-auto rounded-full"
-				on:click={() => {
-					document.getElementById('add').disabled = true;
-					addModel();
-				}}
-			>
-				<Plus class="mr-2 h-4 w-4" />
-				Add to queue
-			</Button>
-		</div>
-	</Card.Header>
+		</Card.Header>
 
-	<Card.Content class="px-6 md:px-12">
-		<div class="grid grid-cols-2 gap-4">
-			<div class="border rounded-lg bg-card text-card-foreground shadow-sm h-min">
-				<Table.Root>
-					<Table.Body>
-						<Table.Row>
-							<Table.Head class="border-r">Dataset</Table.Head>
-							<Table.Cell>{data.name.split('.')[0]}</Table.Cell>
-						</Table.Row>
-						<Table.Row>
-							<Table.Head class="border-r">Shape</Table.Head>
-							<Table.Cell>{data.shape.join(' x ')}</Table.Cell>
-						</Table.Row>
-						<Table.Row>
-							<Table.Head class="border-r">Target</Table.Head>
-							<Table.Cell>{data.target}</Table.Cell>
-						</Table.Row>
-						<Table.Row>
-							<Table.Head class="border-r">Features</Table.Head>
-							<Table.Cell>{data.features.join(', ')}</Table.Cell>
-						</Table.Row>
-					</Table.Body>
-				</Table.Root>
-			</div>
-
-			<div class="border rounded-lg bg-card text-card-foreground shadow-sm">
-				<Table.Root>
-					<Table.Header>
-						<Table.Row>
-							{#each data.features as col}
-								<Table.Head class="font-medium">{col}</Table.Head>
-							{/each}
-							<Table.Head class="font-medium">{data.target}</Table.Head>
-						</Table.Row>
-					</Table.Header>
-					<Table.Body>
-						{#each data.head as row}
+		<Card.Content class="px-6 md:px-12">
+			<div class="grid grid-cols-2 gap-4">
+				<div class="border rounded-lg bg-card text-card-foreground shadow-sm h-min">
+					<Table.Root>
+						<Table.Body>
 							<Table.Row>
-								{#each row as val}
-									<Table.Cell>{val}</Table.Cell>
-								{/each}
+								<Table.Head class="border-r">Dataset</Table.Head>
+								<Table.Cell>{data.name.split('.')[0]}</Table.Cell>
 							</Table.Row>
-						{/each}
-					</Table.Body>
-				</Table.Root>
-			</div>
-		</div>
-		<div class="flex flex-col">
-			<span class="text-xl font-semibold">Model</span>
-			<div class="ml-2 mt-4 flex flex-row items-center">
-				<div class="mr-4 flex flex-row items-center max-w-sm">
-					<Label for="name" class="text-md mr-4">Name</Label>
-					<Input id="name" type="text" bind:value={model.name} />
+							<Table.Row>
+								<Table.Head class="border-r">Shape</Table.Head>
+								<Table.Cell>{data.shape.join(' x ')}</Table.Cell>
+							</Table.Row>
+							<Table.Row>
+								<Table.Head class="border-r">Target</Table.Head>
+								<Table.Cell>{data.target}</Table.Cell>
+							</Table.Row>
+							<Table.Row>
+								<Table.Head class="border-r">Features</Table.Head>
+								<Table.Cell>{data.features.join(', ')}</Table.Cell>
+							</Table.Row>
+						</Table.Body>
+					</Table.Root>
 				</div>
-				<div class="mr-4 flex flex-row items-center max-w-sm">
-					<Label for="task" class="text-md mr-4">Task</Label>
-					<Select.Root>
-						<Select.Trigger>
-							<Select.Value class="min-w-[12rem]" placeholder="Select the task" />
-						</Select.Trigger>
-						<Select.Content>
-							<Select.Group>
-								{#each ['Regression', 'Classification', 'Clustering'] as task}
-									<Select.Item value={task} on:click={() => (model.model.task = task)}>
-										{task}
-									</Select.Item>
+
+				<div class="border rounded-lg bg-card text-card-foreground shadow-sm">
+					<Table.Root>
+						<Table.Header>
+							<Table.Row>
+								{#each data.features as col}
+									<Table.Head class="font-medium">{col}</Table.Head>
 								{/each}
-							</Select.Group>
-						</Select.Content>
-					</Select.Root>
+								<Table.Head class="font-medium">{data.target}</Table.Head>
+							</Table.Row>
+						</Table.Header>
+						<Table.Body>
+							{#each data.head as row}
+								<Table.Row>
+									{#each row as val}
+										<Table.Cell>{val}</Table.Cell>
+									{/each}
+								</Table.Row>
+							{/each}
+						</Table.Body>
+					</Table.Root>
 				</div>
-				{#if model.model.task === 'Regression'}
-					<div class="flex flex-row items-center max-w-sm">
-						<Label for="type" class="text-md mr-4">Type</Label>
-						<Select.Root preventScroll={false}>
-							<Select.Trigger>
-								<Select.Value class="min-w-[12rem]" placeholder="Select the type" />
-							</Select.Trigger>
-							<Select.Content>
-								<Select.Group>
-									{#each ['Ordinary Least Squares', 'Isotonic Regression', 'GLM', 'Elastic Net', 'Binomial Logistic Regression', 'Multinomial Logistic Regression'] as type}
-										<Select.Item value={type} on:click={() => (model.model.type = type)}>
+			</div>
+
+			<div class="flex flex-col">
+				<span class="text-xl font-semibold">Model</span>
+				<div class="ml-2 mt-4 flex flex-row gap-4">
+					<Form.Field {config} name="name">
+						<Form.Item>
+							<Form.Label>Name</Form.Label>
+							<Form.Input id="name" type="text" />
+						</Form.Item>
+					</Form.Field>
+					<Form.Field {config} name="model">
+						<Form.Item>
+							<Form.Label>Model</Form.Label>
+							<Form.Select preventScroll={false}>
+								<Form.SelectTrigger placeholder="Choose the model type" class="min-w-[192px]" />
+								<Form.SelectContent>
+									{#each ['Ordinary Least Squares', 'Elastic Net', 'Logistic Regression', 'Gradient Descent', 'Decision Tree', 'Support Vector Machine'] as type}
+										<Form.SelectItem value={type}>
 											{type}
-										</Select.Item>
+										</Form.SelectItem>
 									{/each}
-								</Select.Group>
-							</Select.Content>
-						</Select.Root>
-					</div>
-				{:else if model.model.task === 'Classification'}
-					<div class="flex flex-row items-center max-w-sm">
-						<Label for="type" class="text-md mr-4">Type</Label>
-						<Select.Root preventScroll={false}>
-							<Select.Trigger>
-								<Select.Value class="min-w-[12rem]" placeholder="Select the type" />
-							</Select.Trigger>
-							<Select.Content>
-								<Select.Group>
-									{#each ['Decision Tree', 'Support Vector Machine', 'Gaussian Naive Bayes', 'Multinomial Naive Bayes'] as type}
-										<Select.Item value={type} on:click={() => (model.model.type = type)}>
-											{type}
-										</Select.Item>
-									{/each}
-								</Select.Group>
-							</Select.Content>
-						</Select.Root>
-					</div>
-				{:else if model.model.task === 'Clustering'}
-					<div class="flex flex-row items-center max-w-sm">
-						<Label for="type" class="text-md mr-4">Type</Label>
-						<Select.Root preventScroll={false}>
-							<Select.Trigger>
-								<Select.Value class="min-w-[12rem]" placeholder="Select the type" />
-							</Select.Trigger>
-							<Select.Content>
-								<Select.Group>
-									{#each ['KMeans', 'DBSCAN'] as type}
-										<Select.Item value={type} on:click={() => (model.model.type = type)}>
-											{type}
-										</Select.Item>
-									{/each}
-								</Select.Group>
-							</Select.Content>
-						</Select.Root>
+								</Form.SelectContent>
+							</Form.Select>
+							<Form.Validation />
+						</Form.Item>
+					</Form.Field>
+					<Form.Field {config} name="test_size">
+						<Form.Item>
+							<Form.Label>Test Size</Form.Label>
+							<Form.Input id="test_size" step="0.01" type="number" />
+						</Form.Item>
+					</Form.Field>
+				</div>
+
+				{#if $val_store.model && $val_store.model !== 'Ordinary Least Squares'}
+					<span class="text-xl font-semibold mt-4">Hyperparameters</span>
+					<div class="ml-2 mt-4 flex flex-row gap-4 flex-wrap">
+						{#each choices[$val_store.model] as choice}
+							{#if choice === 'alpha'}
+								<Form.Field {config} name="alpha">
+									<Form.Item>
+										<Form.Label>Alpha</Form.Label>
+										<Form.Input id="alpha" step="0.01" type="number" />
+										<Form.Validation />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'l1_ratio'}
+								<Form.Field {config} name="l1_ratio">
+									<Form.Item>
+										<Form.Label>L1 Ratio</Form.Label>
+										<Form.Input id="l1_ratio" step="0.001" type="number" />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'max_iter'}
+								<Form.Field {config} name="max_iter">
+									<Form.Item>
+										<Form.Label>Max Iterations</Form.Label>
+										<Form.Input id="max_iter" type="number" />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'tol'}
+								<Form.Field {config} name="tol">
+									<Form.Item>
+										<Form.Label>Tolerance</Form.Label>
+										<Form.Input id="tol" step="0.0001" type="number" />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'C'}
+								<Form.Field {config} name="C">
+									<Form.Item>
+										<Form.Label>C</Form.Label>
+										<Form.Input id="C" step="0.01" type="number" />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'loss'}
+								<Form.Field {config} name="loss">
+									<Form.Item>
+										<Form.Label>Loss</Form.Label>
+										<Form.Select preventScroll={false}>
+											<Form.SelectTrigger placeholder="Choose the loss function" />
+											<Form.SelectContent>
+												{#each ['hinge', 'huber', 'log_loss', 'squared_hinge', 'perceptron', 'epsilon_insensitive', 'squared_epsilon_insensitive'] as type}
+													<Form.SelectItem value={type}>
+														{type}
+													</Form.SelectItem>
+												{/each}
+											</Form.SelectContent>
+										</Form.Select>
+										<Form.Validation />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'shuffle'}
+								<Form.Field {config} name="shuffle">
+									<Form.Item>
+										<div class="flex flex-col space-y-2">
+											<Form.Label class="my-2">Shuffle</Form.Label>
+											<Form.Switch class="mt-4" />
+										</div>
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'learning_rate'}
+								<Form.Field {config} name="learning_rate">
+									<Form.Item>
+										<Form.Label>Learning Rate</Form.Label>
+										<Form.Select preventScroll={false}>
+											<Form.SelectTrigger placeholder="Choose the learning rate" />
+											<Form.SelectContent>
+												{#each ['constant', 'optimal', 'invscaling', 'adaptive'] as type}
+													<Form.SelectItem value={type}>
+														{type}
+													</Form.SelectItem>
+												{/each}
+											</Form.SelectContent>
+										</Form.Select>
+										<Form.Validation />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'early_stopping'}
+								<Form.Field {config} name="early_stopping">
+									<Form.Item>
+										<div class="flex flex-col space-y-2">
+											<Form.Label class="my-2">Early Stopping</Form.Label>
+											<Form.Switch class="mt-4" />
+										</div>
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'validation_fraction'}
+								<Form.Field {config} name="validation_fraction">
+									<Form.Item>
+										<Form.Label>Validation Fraction</Form.Label>
+										<Form.Input id="validation_fraction" step="0.01" type="number" />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'criterion'}
+								<Form.Field {config} name="criterion">
+									<Form.Item>
+										<Form.Label>Criterion</Form.Label>
+										<Form.Select preventScroll={false}>
+											<Form.SelectTrigger placeholder="Choose the criterion" />
+											<Form.SelectContent>
+												{#each ['gini', 'entropy', 'log_loss'] as type}
+													<Form.SelectItem value={type}>
+														{type}
+													</Form.SelectItem>
+												{/each}
+											</Form.SelectContent>
+										</Form.Select>
+										<Form.Validation />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'max_depth'}
+								<Form.Field {config} name="max_depth">
+									<Form.Item>
+										<Form.Label>Max Depth</Form.Label>
+										<Form.Input id="max_depth" type="number" />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'min_samples_split'}
+								<Form.Field {config} name="min_samples_split">
+									<Form.Item>
+										<Form.Label>Min Samples Split</Form.Label>
+										<Form.Input id="min_samples_split" type="number" />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'min_samples_leaf'}
+								<Form.Field {config} name="min_samples_leaf">
+									<Form.Item>
+										<Form.Label>Min Samples Leaf</Form.Label>
+										<Form.Input id="min_samples_leaf" type="number" />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'max_features'}
+								<Form.Field {config} name="max_features">
+									<Form.Item>
+										<Form.Label>Max Features</Form.Label>
+										<Form.Select preventScroll={false}>
+											<Form.SelectTrigger placeholder="Choose the max features" />
+											<Form.SelectContent>
+												{#each ['auto', 'sqrt', 'log2'] as type}
+													<Form.SelectItem value={type}>
+														{type}
+													</Form.SelectItem>
+												{/each}
+											</Form.SelectContent>
+										</Form.Select>
+										<Form.Validation />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'max_leaf_nodes'}
+								<Form.Field {config} name="max_leaf_nodes">
+									<Form.Item>
+										<Form.Label>Max Leaf Nodes</Form.Label>
+										<Form.Input id="max_leaf_nodes" type="number" />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'kernel'}
+								<Form.Field {config} name="kernel">
+									<Form.Item>
+										<Form.Label>Kernel</Form.Label>
+										<Form.Select preventScroll={false}>
+											<Form.SelectTrigger placeholder="Choose the kernel" />
+											<Form.SelectContent>
+												{#each ['linear', 'poly', 'rbf', 'sigmoid'] as type}
+													<Form.SelectItem value={type}>
+														{type}
+													</Form.SelectItem>
+												{/each}
+											</Form.SelectContent>
+										</Form.Select>
+										<Form.Validation />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'degree'}
+								<Form.Field {config} name="degree">
+									<Form.Item>
+										<Form.Label>Degree</Form.Label>
+										<Form.Input id="degree" type="number" />
+									</Form.Item>
+								</Form.Field>
+							{:else if choice === 'gamma'}
+								<Form.Field {config} name="gamma">
+									<Form.Item>
+										<Form.Label>Gamma</Form.Label>
+										<Form.Input id="gamma" step="0.001" type="number" />
+									</Form.Item>
+								</Form.Field>
+							{/if}
+						{/each}
 					</div>
 				{/if}
 			</div>
-			{#if model.model.type}
-				<div class="ml-2 mt-4 flex flex-row items-center">
-					<div class="mr-4 flex flex-row items-center max-w-sm">
-						<Label for="test_size" class="whitespace-nowrap text-md mr-4">Test Size</Label>
-						<Input id="test_size" type="number" bind:value={model.split.test_size} />
-					</div>
-					<div class="mr-4 flex flex-row items-center max-w-sm">
-						<div class="flex items-center space-x-2">
-							<Switch id="shuffle" bind:checked={model.split.shuffle} />
-							<Label for="shuffle" class="text-md">Shuffle</Label>
-						</div>
-					</div>
-				</div>
-				<div class="ml-2 mt-4 flex flex-row items-center">
-					<div class="mr-4 flex flex-row items-center max-w-md">
-						<Label for="learning_rate" class="whitespace-nowrap text-md mr-4">Learning Rate</Label>
-						<Input
-							id="learning_rate"
-							type="number"
-							bind:value={model.hyperparameters.learning_rate}
-						/>
-					</div>
-					<div class="mr-4 flex flex-row items-center max-w-sm">
-						<Label for="epochs" class="text-md mr-4">Epochs</Label>
-						<Input id="epochs" type="number" bind:value={model.hyperparameters.epochs} />
-					</div>
-					<div class="mr-4 flex flex-row items-center max-w-sm">
-						<Label for="batch_size" class="whitespace-nowrap text-md mr-4">Batch Size</Label>
-						<Input id="batch_size" type="number" bind:value={model.hyperparameters.batch_size} />
-					</div>
-				</div>
-				<div class="ml-2 mt-4 flex flex-row items-center">
-					<div class="mr-4 flex flex-row items-center max-w-sm">
-						<Label for="optimizer" class="text-md mr-4">Optimizer</Label>
-						<Select.Root preventScroll={false}>
-							<Select.Trigger>
-								<Select.Value class="min-w-[12rem]" placeholder="Select the optimizer" />
-							</Select.Trigger>
-							<Select.Content>
-								<Select.Group>
-									{#each ['Adam', 'Adagrad', 'Adamax', 'Ftrl'] as optimizer}
-										<Select.Item
-											value={optimizer}
-											on:click={() => (model.hyperparameters.optimizer = optimizer)}
-										>
-											{optimizer}
-										</Select.Item>
-									{/each}
-								</Select.Group>
-							</Select.Content>
-						</Select.Root>
-					</div>
-					<div class="mr-4 flex flex-row items-center max-w-sm">
-						<Label for="loss" class="text-md mr-4">Loss</Label>
-						<Select.Root preventScroll={false}>
-							<Select.Trigger>
-								<Select.Value class="min-w-[12rem]" placeholder="Select the loss" />
-							</Select.Trigger>
-							<Select.Content>
-								<Select.Group>
-									{#each ['RSME', 'MSE', 'MAE', 'MSLE', 'MAPE', 'Hinge', 'Log Cosh', 'Binary Crossentropy', 'Poisson', 'Cosine Similarity', 'Huber'] as loss}
-										<Select.Item value={loss} on:click={() => (model.hyperparameters.loss = loss)}>
-											{loss}
-										</Select.Item>
-									{/each}
-								</Select.Group>
-							</Select.Content>
-						</Select.Root>
-					</div>
-				</div>
-			{/if}
-		</div>
-	</Card.Content>
-</Card.Root>
+		</Card.Content>
+	</Card.Root>
+</Form.Root>
