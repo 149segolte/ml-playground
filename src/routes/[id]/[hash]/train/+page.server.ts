@@ -26,7 +26,23 @@ export const actions: Actions = {
 				form
 			});
 		}
-		console.log(form);
+
+		let res = await fetch(`${url}/project/${params.id}/file/${params.hash}/add`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(form.data),
+			redirect: 'follow'
+		});
+		let data = await res.json();
+		if (res.status !== 201) {
+			return fail(res.status, {
+				form
+			});
+		}
+		console.log(data);
+
 		return {
 			form
 		};
