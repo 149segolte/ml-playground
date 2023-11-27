@@ -17,9 +17,7 @@
 		validators: modelSchema,
 		onResult: (ev) => {
 			if (ev.result.type === 'success') {
-				goto(`/${id}`).catch((err) => {
-					console.error('Failed to navigate', err);
-				});
+				console.log('Form validation succeeded', ev.result);
 			} else {
 				console.error('Form validation failed', ev.result);
 				alert(`Form validation failed: ${ev.result}`);
@@ -298,7 +296,7 @@
 										<Form.Select preventScroll={false}>
 											<Form.SelectTrigger placeholder="Choose the max features" />
 											<Form.SelectContent>
-												{#each ['auto', 'sqrt', 'log2'] as type}
+												{#each ['sqrt', 'log2'] as type}
 													<Form.SelectItem value={type}>
 														{type}
 													</Form.SelectItem>

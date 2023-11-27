@@ -35,7 +35,7 @@ export const modelSchema = z.object({
 	max_depth: z.coerce.number().min(0).optional(),
 	min_samples_split: z.coerce.number().min(0).optional(),
 	min_samples_leaf: z.coerce.number().min(0).optional(),
-	max_features: z.enum(['auto', 'sqrt', 'log2']).optional(),
+	max_features: z.enum(['sqrt', 'log2']).optional(),
 	max_leaf_nodes: z.coerce.number().min(0).optional(),
 	kernel: z.enum(['linear', 'poly', 'rbf', 'sigmoid']).optional(),
 	degree: z.coerce.number().min(0).optional(),
