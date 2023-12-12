@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import * as d3 from 'd3';
 	import { page } from '$app/stores';
 	import type { PageData } from './$types';
 	import * as Card from '$lib/components/ui/card';
@@ -122,7 +121,7 @@
 							</div>
 						{/each}
 					</div>
-					{#if result}
+					{#if result !== null}
 						<div class="mt-4">
 							<Label for="result">Result</Label>
 							<Input class="mt-2" id="result" type="number" value={result} readonly />
@@ -172,18 +171,18 @@
 						</Table.Root>
 					</div>
 
-						<div class="border rounded-lg bg-card text-card-foreground shadow-sm h-min">
-							<Table.Root>
-								<Table.Body>
-									{#each Object.keys(data.model.config) as key}
-										<Table.Row>
-											<Table.Head class="border-r">{key}</Table.Head>
-											<Table.Cell>{data.model.config[key]}</Table.Cell>
-										</Table.Row>
-									{/each}
-								</Table.Body>
-							</Table.Root>
-						</div>
+					<div class="border rounded-lg bg-card text-card-foreground shadow-sm h-min">
+						<Table.Root>
+							<Table.Body>
+								{#each Object.keys(data.model.config) as key}
+									<Table.Row>
+										<Table.Head class="border-r">{key}</Table.Head>
+										<Table.Cell>{data.model.config[key]}</Table.Cell>
+									</Table.Row>
+								{/each}
+							</Table.Body>
+						</Table.Root>
+					</div>
 				</div>
 			</div>
 
